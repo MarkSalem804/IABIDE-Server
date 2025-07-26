@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id                     Int       @id @default(autoincrement())
+  username               String    @unique
+  password               String?
+  role                   String?
+  firstName              String?
+  middleName             String?
+  lastName               String?
+  email                  String    @unique
+  status                 Boolean   @default(true) //activated or deactivated
+  isPasswordChanged      Boolean   @default(false)
+  twoFactorEnabled       Boolean   @default(false)
+  lastLogin              DateTime?
+  otpCode                String?
+  otpExpiry              DateTime?
+  contactNo              String    @unique
+  position               String?
+  totalDocumentsUploaded Int       @default(0)
+  refreshToken           String?
+  refreshTokenExpiry     DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model location {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  schools   schools[]
+}
+
+model cluster {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  schools     schools[]
+}
+
+model documents {
+  id         Int       @id @default(autoincrement())
+  fileName   String?
+  fileType   String?
+  fileSize   Int?
+  uploadedBy Int?
+  uploadedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  postId     Int?
+  post       post?     @relation(fields: [postId], references: [id])
+}
+
+model post {
+  id                   Int           @id @default(autoincrement())
+  status               Boolean       @default(true) //past(false) or active/current(true)
+  title                String?
+  documentType         String? //hardcopy, softcopy or provided link
+  postSubmissions      Json?
+  postRecipients       Json?
+  deadline             DateTime?
+  instructions         String?
+  remarks              String?
+  availability         Boolean       @default(true) //open(true) or closed(false)
+  availabilityDuration Int?
+  availabilityDate     DateTime? //even after deadline
+  reOpened_at          DateTime?
+  closed_at            DateTime?
+  documents            documents[]
+  submissions          submissions[]
+}
+
+model submissions {
+  id               Int       @id @default(autoincrement())
+  submissionStatus String? //pending, approved or rejected
+  dueStatus        String? //Ahead of time, On time, Late
+  submittedBy      String?
+  submittedAt      DateTime?
+  remarks          String?
+  isHardcopy       Boolean?  @default(false)
+  fileName         String?
+  filePath         String?
+  fileType         String?
+  link             String?
+  postId           Int?
+  post             post?     @relation(fields: [postId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model schools {
+  id         Int       @id @default(autoincrement())
+  name       String
+  schoolId   String?
+  schoolHead String?
+  locationId Int?
+  location   location? @relation(fields: [locationId], references: [id])
+  clusterId  Int?
+  cluster    cluster?  @relation(fields: [clusterId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
